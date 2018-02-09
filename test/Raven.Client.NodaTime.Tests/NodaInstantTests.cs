@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
+using Newtonsoft.Json;
 using NodaTime;
-using Raven.Client.Indexes;
-using Raven.Imports.Newtonsoft.Json;
-using Raven.Tests.Helpers;
+using Raven.Client.Documents;
+using Raven.Client.Documents.Indexes;
 using Xunit;
 
 namespace Raven.Client.NodaTime.Tests
@@ -17,7 +16,7 @@ namespace Raven.Client.NodaTime.Tests
         }
     }
 
-    public class NodaInstantTests : RavenTestBase
+    public class NodaInstantTests : TestBase
     {
         [Fact]
         public void Can_Use_NodaTime_Instant_In_Document_Now()
@@ -51,10 +50,8 @@ namespace Raven.Client.NodaTime.Tests
 
         private void Can_Use_NodaTime_Instant_In_Document(Instant instant)
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
-
                 using (var session = documentStore.OpenSession())
                 {
                     session.Store(new Foo { Id = "foos/1", Instant = instant });
@@ -68,10 +65,12 @@ namespace Raven.Client.NodaTime.Tests
                     Assert.Equal(instant.ToUnixTimeTicks(), foo.Instant.ToUnixTimeTicks());
                 }
 
+                /*
                 var json = documentStore.DatabaseCommands.Get("foos/1").DataAsJson;
-                Debug.WriteLine(json.ToString(Formatting.Indented));
+                System.Diagnostics.Debug.WriteLine(json.ToString(Formatting.Indented));
                 var expected = instant.ToString(NodaUtil.Instant.FullIsoPattern.PatternText, null);
                 Assert.Equal(expected, json.Value<string>("Instant"));
+                */
             }
         }
 
@@ -107,10 +106,8 @@ namespace Raven.Client.NodaTime.Tests
 
         private void Can_Use_NodaTime_Instant_In_Dynamic_Index1(Instant instant)
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
-
                 using (var session = documentStore.OpenSession())
                 {
                     session.Store(new Foo { Id = "foos/1", Instant = instant });
@@ -124,7 +121,7 @@ namespace Raven.Client.NodaTime.Tests
                     var q1 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.Instant == instant);
                     var results1 = q1.ToList();
-                    Assert.Equal(1, results1.Count);
+                    Assert.Single(results1);
 
                     var q2 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.Instant > instant)
@@ -146,10 +143,8 @@ namespace Raven.Client.NodaTime.Tests
 
         private void Can_Use_NodaTime_Instant_In_Dynamic_Index2(Instant instant)
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
-
                 using (var session = documentStore.OpenSession())
                 {
                     session.Store(new Foo { Id = "foos/1", Instant = instant });
@@ -163,7 +158,7 @@ namespace Raven.Client.NodaTime.Tests
                     var q1 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.Instant == instant);
                     var results1 = q1.ToList();
-                    Assert.Equal(1, results1.Count);
+                    Assert.Single(results1);
 
                     var q2 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.Instant < instant)
@@ -215,9 +210,8 @@ namespace Raven.Client.NodaTime.Tests
 
         private void Can_Use_NodaTime_Instant_In_Static_Index1(Instant instant)
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
                 documentStore.ExecuteIndex(new TestIndex());
 
                 using (var session = documentStore.OpenSession())
@@ -233,7 +227,7 @@ namespace Raven.Client.NodaTime.Tests
                     var q1 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.Instant == instant);
                     var results1 = q1.ToList();
-                    Assert.Equal(1, results1.Count);
+                    Assert.Single(results1);
 
                     var q2 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.Instant > instant)
@@ -255,9 +249,8 @@ namespace Raven.Client.NodaTime.Tests
 
         private void Can_Use_NodaTime_Instant_In_Static_Index2(Instant instant)
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
                 documentStore.ExecuteIndex(new TestIndex());
 
                 using (var session = documentStore.OpenSession())
@@ -273,7 +266,7 @@ namespace Raven.Client.NodaTime.Tests
                     var q1 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.Instant == instant);
                     var results1 = q1.ToList();
-                    Assert.Equal(1, results1.Count);
+                    Assert.Single(results1);
 
                     var q2 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.Instant < instant)

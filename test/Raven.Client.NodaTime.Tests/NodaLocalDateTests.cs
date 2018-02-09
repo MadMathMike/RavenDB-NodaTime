@@ -1,15 +1,14 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
+using Newtonsoft.Json;
 using NodaTime;
 using NodaTime.Text;
-using Raven.Client.Indexes;
-using Raven.Imports.Newtonsoft.Json;
-using Raven.Tests.Helpers;
+using Raven.Client.Documents;
+using Raven.Client.Documents.Indexes;
 using Xunit;
 
 namespace Raven.Client.NodaTime.Tests
 {
-    public class NodaLocalDateTests : RavenTestBase
+    public class NodaLocalDateTests : TestBase
     {
         [Fact]
         public void Can_Use_NodaTime_LocalDate_In_Document_Today()
@@ -31,10 +30,8 @@ namespace Raven.Client.NodaTime.Tests
 
         private void Can_Use_NodaTime_LocalDate_In_Document(LocalDate ld)
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
-
                 using (var session = documentStore.OpenSession())
                 {
                     session.Store(new Foo { Id = "foos/1", LocalDate = ld });
@@ -48,10 +45,12 @@ namespace Raven.Client.NodaTime.Tests
                     Assert.Equal(ld, foo.LocalDate);
                 }
 
+                /*
                 var json = documentStore.DatabaseCommands.Get("foos/1").DataAsJson;
-                Debug.WriteLine(json.ToString(Formatting.Indented));
+                System.Diagnostics.Debug.WriteLine(json.ToString(Formatting.Indented));
                 var expected = ld.ToString(LocalDatePattern.Iso.PatternText, null);
                 Assert.Equal(expected, json.Value<string>("LocalDate"));
+                */
             }
         }
 
@@ -75,10 +74,8 @@ namespace Raven.Client.NodaTime.Tests
 
         private void Can_Use_NodaTime_LocalDate_In_Dynamic_Index1(LocalDate ld)
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
-
                 using (var session = documentStore.OpenSession())
                 {
                     session.Store(new Foo { Id = "foos/1", LocalDate = ld });
@@ -92,7 +89,7 @@ namespace Raven.Client.NodaTime.Tests
                     var q1 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.LocalDate == ld);
                     var results1 = q1.ToList();
-                    Assert.Equal(1, results1.Count);
+                    Assert.Single(results1);
 
                     var q2 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.LocalDate > ld)
@@ -114,10 +111,8 @@ namespace Raven.Client.NodaTime.Tests
 
         private void Can_Use_NodaTime_LocalDate_In_Dynamic_Index2(LocalDate ld)
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
-
                 using (var session = documentStore.OpenSession())
                 {
                     session.Store(new Foo { Id = "foos/1", LocalDate = ld });
@@ -131,7 +126,7 @@ namespace Raven.Client.NodaTime.Tests
                     var q1 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.LocalDate == ld);
                     var results1 = q1.ToList();
-                    Assert.Equal(1, results1.Count);
+                    Assert.Single(results1);
 
                     var q2 = session.Query<Foo>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.LocalDate < ld)
@@ -171,9 +166,8 @@ namespace Raven.Client.NodaTime.Tests
 
         private void Can_Use_NodaTime_LocalDate_In_Static_Index1(LocalDate ld)
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
                 documentStore.ExecuteIndex(new TestIndex());
 
                 using (var session = documentStore.OpenSession())
@@ -189,7 +183,7 @@ namespace Raven.Client.NodaTime.Tests
                     var q1 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.LocalDate == ld);
                     var results1 = q1.ToList();
-                    Assert.Equal(1, results1.Count);
+                    Assert.Single(results1);
 
                     var q2 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.LocalDate > ld)
@@ -211,9 +205,8 @@ namespace Raven.Client.NodaTime.Tests
 
         private void Can_Use_NodaTime_LocalDate_In_Static_Index2(LocalDate ld)
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
                 documentStore.ExecuteIndex(new TestIndex());
 
                 using (var session = documentStore.OpenSession())
@@ -229,7 +222,7 @@ namespace Raven.Client.NodaTime.Tests
                     var q1 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.LocalDate == ld);
                     var results1 = q1.ToList();
-                    Assert.Equal(1, results1.Count);
+                    Assert.Single(results1);
 
                     var q2 = session.Query<Foo, TestIndex>().Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.LocalDate < ld)

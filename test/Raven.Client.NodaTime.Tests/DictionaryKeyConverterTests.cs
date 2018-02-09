@@ -1,19 +1,16 @@
 ﻿using System.Collections.Generic;
 using NodaTime;
-using Raven.Tests.Helpers;
 using Xunit;
 
 namespace Raven.Client.NodaTime.Tests
 {
-    public class DictionaryKeyConverterTests : RavenTestBase
+    public class DictionaryKeyConverterTests : TestBase
     {
         [Fact]
         public void Can_Use_NodaTime_Instant_In_Dictionary_Key()
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
-
                 Instant i1 = SystemClock.Instance.GetCurrentInstant();
                 Instant i2 = i1 + Duration.FromHours(1);
 
@@ -37,10 +34,8 @@ namespace Raven.Client.NodaTime.Tests
         [Fact]
         public void Can_Use_NodaTime_Instant_In_IDictionary_Key()
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
-
                 Instant i1 = SystemClock.Instance.GetCurrentInstant();
                 Instant i2 = i1 + Duration.FromHours(1);
 

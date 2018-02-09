@@ -1,19 +1,16 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
-using Raven.Abstractions.Indexing;
-using Raven.Client.Indexes;
-using Raven.Tests.Helpers;
+using Raven.Client.Documents.Indexes;
 using Xunit;
 
 namespace Raven.Client.NodaTime.Tests.TimeZoneConversionTests
 {
-    public class TimeZoneInfoTests : RavenTestBase
+    public class TimeZoneInfoTests : TestBase
     {
         [Fact]
         public void Can_Convert_TimeZone_Using_TimeZoneInfo_In_Static_Index()
         {
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
                 documentStore.ExecuteIndex(new Foo_ByDate_MultiZone());
 
@@ -27,15 +24,13 @@ namespace Raven.Client.NodaTime.Tests.TimeZoneConversionTests
 
                 using (var session = documentStore.OpenSession())
                 {
-                    var result = session.Query<Foo, Foo_ByDate_MultiZone>()
-                                        .ProjectFromIndexFieldsInto<Result>()
-                                        .First();
+                    var result = session.Query<Result, Foo_ByDate_MultiZone>().First();
 
-                    Debug.WriteLine("UTC:      {0}", result.DateTimeUtc);
-                    Debug.WriteLine("Pacific:  {0}", result.DateTimePacific);
-                    Debug.WriteLine("Mountain: {0}", result.DateTimeMountain);
-                    Debug.WriteLine("Central:  {0}", result.DateTimeCentral);
-                    Debug.WriteLine("Eastern:  {0}", result.DateTimeEastern);
+                    System.Diagnostics.Debug.WriteLine("UTC:      {0}", result.DateTimeUtc);
+                    System.Diagnostics.Debug.WriteLine("Pacific:  {0}", result.DateTimePacific);
+                    System.Diagnostics.Debug.WriteLine("Mountain: {0}", result.DateTimeMountain);
+                    System.Diagnostics.Debug.WriteLine("Central:  {0}", result.DateTimeCentral);
+                    System.Diagnostics.Debug.WriteLine("Eastern:  {0}", result.DateTimeEastern);
                 }
             }
         }

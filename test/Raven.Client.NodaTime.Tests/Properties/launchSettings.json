@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "Raven.Client.NodaTime.Tests": {
+      "commandName": "Project"
+    }
+  }
+}

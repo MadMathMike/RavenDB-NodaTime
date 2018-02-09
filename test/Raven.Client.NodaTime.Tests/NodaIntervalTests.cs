@@ -1,14 +1,13 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
+using Newtonsoft.Json;
 using NodaTime;
-using Raven.Client.Indexes;
-using Raven.Imports.Newtonsoft.Json;
-using Raven.Tests.Helpers;
+using Raven.Client.Documents;
+using Raven.Client.Documents.Indexes;
 using Xunit;
 
 namespace Raven.Client.NodaTime.Tests
 {
-    public class NodaIntervalTests : RavenTestBase
+    public class NodaIntervalTests : TestBase
     {
         [Fact]
         public void Can_Use_NodaTime_Interval_In_Document()
@@ -18,10 +17,8 @@ namespace Raven.Client.NodaTime.Tests
             var end = now + Duration.FromMinutes(5);
             var interval = new Interval(start, end);
 
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
-
                 using (var session = documentStore.OpenSession())
                 {
                     session.Store(new Foo { Id = "foos/1", Interval = interval });
@@ -35,12 +32,14 @@ namespace Raven.Client.NodaTime.Tests
                     Assert.Equal(interval, foo.Interval);
                 }
 
+                /*
                 var json = documentStore.DatabaseCommands.Get("foos/1").DataAsJson;
-                Debug.WriteLine(json.ToString(Formatting.Indented));
+                System.Diagnostics.Debug.WriteLine(json.ToString(Formatting.Indented));
                 var expectedStart = interval.Start.ToString(NodaUtil.Instant.FullIsoPattern.PatternText, null);
                 var expectedEnd = interval.End.ToString(NodaUtil.Instant.FullIsoPattern.PatternText, null);
                 Assert.Equal(expectedStart, json["Interval"].Value<string>("Start"));
                 Assert.Equal(expectedEnd, json["Interval"].Value<string>("End"));
+                */
             }
         }
 
@@ -53,10 +52,8 @@ namespace Raven.Client.NodaTime.Tests
             var interval1 = new Interval(start, end);
             var interval2 = new Interval(end, end + Duration.FromMinutes(5));
 
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
-
                 using (var session = documentStore.OpenSession())
                 {
                     session.Store(new Foo { Id = "foos/1", Interval = interval1 });
@@ -70,13 +67,13 @@ namespace Raven.Client.NodaTime.Tests
                                     .Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.Interval.Start == interval1.Start && x.Interval.End == interval1.End);
                     var results1 = q1.ToList();
-                    Assert.Equal(1, results1.Count);
+                    Assert.Single(results1);
 
                     var q2 = session.Query<Foo>()
                                     .Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.Interval.Start <= now && x.Interval.End > now);
                     var results2 = q2.ToList();
-                    Assert.Equal(1, results2.Count);
+                    Assert.Single(results2);
 
                     var q3 = session.Query<Foo>()
                                     .Customize(x => x.WaitForNonStaleResults())
@@ -97,9 +94,8 @@ namespace Raven.Client.NodaTime.Tests
             var interval1 = new Interval(start, end);
             var interval2 = new Interval(end, end + Duration.FromMinutes(5));
 
-            using (var documentStore = NewDocumentStore())
+            using (var documentStore = GetDocumentStore())
             {
-                documentStore.ConfigureForNodaTime();
                 documentStore.ExecuteIndex(new TestIndex());
 
                 using (var session = documentStore.OpenSession())
@@ -115,13 +111,13 @@ namespace Raven.Client.NodaTime.Tests
                                     .Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.Interval.Start == interval1.Start && x.Interval.End == interval1.End);
                     var results1 = q1.ToList();
-                    Assert.Equal(1, results1.Count);
+                    Assert.Single(results1);
 
                     var q2 = session.Query<Foo, TestIndex>()
                                     .Customize(x => x.WaitForNonStaleResults())
                                     .Where(x => x.Interval.Start <= now && x.Interval.End > now);
                     var results2 = q2.ToList();
-                    Assert.Equal(1, results2.Count);
+                    Assert.Single(results2);
 
                     var q3 = session.Query<Foo>()
                                     .Customize(x => x.WaitForNonStaleResults())
